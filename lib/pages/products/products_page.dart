@@ -91,10 +91,13 @@ class _ProductsPageState extends State<ProductsPage> {
                   padding: EdgeInsets.all(1),
                   children:
                       productModel.allProducts.map<Widget>((ProductModel item) {
-                    return Padding(
+                    return GestureDetector(
+                      onTap: ()=>onProductItemClicked(context, item),
+                       child: Padding(
                       padding: EdgeInsets.all(5),
                       child: ProductItemCardWidget(item: item),
-                    );
+                    ),
+                      );
                   }).toList(),
                 ),
               ),
@@ -157,4 +160,11 @@ class _ProductsPageState extends State<ProductsPage> {
       ),
     );
   }
+
+void onProductItemClicked(BuildContext context ,ProductModel model){
+  Navigator.of(context).pushNamed("/product-details",arguments: {
+    'productId':model.productId,
+    'productName':model.productName,
+  });
+}
 }

@@ -12,16 +12,18 @@ class ProductModel {
   String? regularPrice;
   String? salePrice;
   List<ImageModel>? images;
-  List<int>? relatedId;
 
-  ProductModel({
+
+  List<int>? relatedIds;
+
+  ProductModel({  
     this.productId,
-    this.productName,
+    this.productName, 
     this.price,
     this.regularPrice,
     this.salePrice,
     this.images,
-    this.relatedId,
+    this.relatedIds,
   });
 
   ProductModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +42,10 @@ class ProductModel {
         images!.add(ImageModel.fromJson(v));
       });
     }
+if(json["cross_sell_ids"]!=null){
+  relatedIds=json["cross_sell_ids"].cast<int>();
+}
+
   }
 }
 

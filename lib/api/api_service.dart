@@ -57,6 +57,8 @@ class ApiService {
     String? categoryId,
     String? sortOrder = "asc",
     String? sortBy,
+List<int>?productIds,
+
   }) async {
     final String basicAuth =
         'Basic ' + base64Encode(utf8.encode('${Config.key}:${Config.secret}'));
@@ -98,6 +100,10 @@ class ApiService {
       queryString["order"] = sortOrder;
     }
 
+    if(productIds != null){
+      queryString["include"]=productIds.join(",").toString();
+    }
+
     final uri = Uri.https(
       Config.apiURL,
       '${Config.apiEndPoint}/${Config.productsURL}',
@@ -129,4 +135,58 @@ class ApiService {
       return null;
     }
   }
+
+ static Future<ProductModel?> getProductDetails(productId) async {
+    final String basicAuth =
+        'Basic ' + base64Encode(utf8.encode('${Config.key}:${Config.secret}'));
+
+    Map<String, dynamic> queryString = {
+      '_fields[]': [
+        'id',
+        'name',
+        'price',
+        'regular_price',
+        'sale_price',
+        'short_description',
+        'images',
+        'cross_sell_ids'
+      ],
+      'per_page': '100',
+      'page': '1',
+    };
+
+     
+
+    final uri = Uri.https(
+      Config.apiURL,
+      "${Config.apiEndPoint}/${Config.productsURL}/$productId",
+      queryString,
+    );
+
+    print("Requesting URL: $uri");
+
+    try {
+      final response = await client.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+      );
+
+      print("Response Code: \${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ProductModel.fromJson(data);
+      } else {
+        print('Failed to load categories: \${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching categories: $e");
+      return null;
+    }
+  }
 }
+

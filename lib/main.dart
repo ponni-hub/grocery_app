@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_app/pages/products/product_details_page.dart';
 import 'package:provider/provider.dart';
 import 'package:grocery_app/pages/dashboard/dashboard_page.dart';
 import 'package:grocery_app/pages/products/products_page.dart';
@@ -16,19 +17,18 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(
-            create: (context) => ProductsProvider(),
-            child: ProductsPage(),
-          )
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          routes: <String, WidgetBuilder>{
-            '/': (context) => defaultHome,
-            '/products': (context) =>
-                ProductsPage(), // Make sure this is not inside a const MaterialApp
-          },
-        ));
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProductsProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => DashboardPage(),
+          '/products': (context) => ProductsPage(),
+          '/product-details': (context) => ProductDetailsPage(),
+        },
+      ),
+    );
   }
 }
