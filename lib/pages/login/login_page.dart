@@ -1,28 +1,22 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import 'package:grocery_app/api/api_service.dart';
-import 'package:grocery_app/models/customer_model.dart';
-// import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 
-
-class UserRegisterPage extends StatefulWidget {
-  const UserRegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<UserRegisterPage> createState() => _UserRegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _UserRegisterPageState extends State<UserRegisterPage> {
+class _LoginPageState extends State<LoginPage> {
   bool isAPICallProcess = false;
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
 
-  String? fullName;
   String? password;
-  String? confirmPassword;
   String? email;
 
-  bool hidePassword = true, hideConfirmPassword = true;
+  bool hidePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +24,9 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
       appBar: _buildAppBar(),
       backgroundColor: Colors.white,
       body: Form(
-  key: _formkey,
-  child: _registerUI(context),
-),
+        key: _formkey,
+        child: _loginUI(context),
+      ),
     );
   }
 
@@ -42,11 +36,11 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
       foregroundColor: Colors.white,
       backgroundColor: Colors.green,
       automaticallyImplyLeading: true,
-      title: const Text("Registration"),
+      title: const Text("User Login"),
     );
   }
 
-  Widget _registerUI(BuildContext context) {
+  _loginUI(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -64,14 +58,7 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildInputField(
-            context,
-            "Full Name",
-            const Icon(Icons.face),
-            (val) => val!.isEmpty ? "Required" : null,
-            (val) => fullName = val!.trim(),
-          ),
-          const SizedBox(height: 15),
+
           _buildInputField(
             context,
             "Email",
@@ -104,30 +91,30 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
             ),
             obscureText: hidePassword,
           ),
-          const SizedBox(height: 15),
-          _buildInputField(
-            context,
-            "Confirm Password",
-            const Icon(Icons.lock_open),
-            (val) {
-              if (val!.isEmpty) return "* Required";
-              if (val != password) return "* Confirm password does not match";
-              return null;
-            },
-            (val) => confirmPassword = val!.trim(),
-            onChange: (val) => confirmPassword = val,
-            suffixIcon: IconButton(
-              onPressed: () {
-                setState(() {
-                  hideConfirmPassword = !hideConfirmPassword;
-                });
-              },
-              icon: Icon(hideConfirmPassword
-                  ? Icons.visibility_off
-                  : Icons.visibility),
-            ),
-            obscureText: hideConfirmPassword,
-          ),
+          // const SizedBox(height: 15),
+          // _buildInputField(
+          //   context,
+          //   "Confirm Password",
+          //   const Icon(Icons.lock_open),
+          //   (val) {
+          //     if (val!.isEmpty) return "* Required";
+          //     if (val != password) return "* Confirm password does not match";
+          //     return null;
+          //   },
+          //   (val) => confirmPassword = val!.trim(),
+          //   onChange: (val) => confirmPassword = val,
+          //   suffixIcon: IconButton(
+          //     onPressed: () {
+          //       setState(() {
+          //         hideConfirmPassword = !hideConfirmPassword;
+          //       });
+          //     },
+          //     icon: Icon(hideConfirmPassword
+          //         ? Icons.visibility_off
+          //         : Icons.visibility),
+          //   ),
+          //   obscureText: hideConfirmPassword,
+          // ),
           const SizedBox(height: 25),
           Center(
             child: ElevatedButton(
@@ -147,14 +134,7 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
                   setState(() {
                     isAPICallProcess = true;
                   });
-
-                  CustomerModel customerModel = CustomerModel(
-                    email: email,
-                    fullName: fullName,
-                    password: password,
-                  );
-
-                  ApiService.registerUser(customerModel).then((response) {
+                  ApiService.loginCustomer(email!, password!).then((response) {
                     setState(() {
                       isAPICallProcess = false;
                     });
@@ -162,10 +142,9 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: const Text("Registration"),
-                        content: Text(response
-                            ? "Registration Successful"
-                            : "Registration Failed"),
+                        title: const Text("Grocery App"),
+                        content: Text(
+                            response ? "Login  Successful" : "Login Failed"),
                         actions: [
                           TextButton(
                             child: const Text("OK"),
@@ -179,38 +158,34 @@ class _UserRegisterPageState extends State<UserRegisterPage> {
               },
               child: const Text("Sign Up"),
             ),
-          
-          
-          
           ),
 
-          SizedBox( height: 10),
-Align(
-  alignment: Alignment.bottomCenter,
-  child: Padding(
-    padding: EdgeInsets.only(right: 25),
-    child: RichText(
-      text: TextSpan(
-        style: TextStyle(color: Colors.black,fontSize: 14),
-        children: <TextSpan>[
-          TextSpan(text: "Already have an account ?",),
-TextSpan(
-  text: "Sign In",
-  style: TextStyle(
-    color: Colors.blue
-  ),
-  recognizer: TapGestureRecognizer()..onTap =(){
-    Navigator.of(context).pushNamed("/login");
-  }
-)
+//           SizedBox( height: 10),
+// Align(
+//   alignment: Alignment.bottomCenter,
+//   child: Padding(
+//     padding: EdgeInsets.only(right: 25),
+//     child: RichText(
+//       text: TextSpan(
+//         style: TextStyle(color: Colors.black,fontSize: 14),
+//         children: <TextSpan>[
+//           TextSpan(text: "Already have an account ?",),
+// TextSpan(
+//   text: "Sign In",
+//   style: TextStyle(
+//     color: Colors.blue
+//   ),
+//   recognizer: TapGestureRecognizer()..onTap =(){
+//     Navigator.of(context).pushNamed("/login");
+//   }
+// )
 
-        ]
-      )
-   
-    
-    ),
-  ),
-)
+//         ]
+//       )
+
+//     ),
+//   ),
+// )
         ],
       ),
     );

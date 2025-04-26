@@ -5,6 +5,8 @@ import 'package:grocery_app/models/category_model.dart';
 import 'package:grocery_app/models/customer_model.dart';
 import 'package:grocery_app/models/product_item.dart';
 import 'package:http/http.dart' as http;
+import 'package:grocery_app/api/shared_service.dart';
+import 'package:grocery_app/models/login_response_model.dart';
 
 class ApiService {
   static var client = http.Client();
@@ -212,77 +214,65 @@ class ApiService {
     }
   }
 
+  static Future<bool> loginCustomer(String username, String password) async {
+    // Create proper request headers
+    Map<String, String> requestHeaders = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+    var url = Uri.https(
+      Config.apiURL,
+      Config.customerLoginURL,
+    );
 
+    var response = await client.post(url, headers: requestHeaders, body: {
+      "username": username,
+      "password": password,
+    });
 
+    if (response.statusCode == 200) {
+      var jsonString = json.decode(response.body);
+      var decodedData = parsejwt(jsonString["token"]);
 
-// static Future<bool> loginCustomer(String username,String password) async {
+      var id = decodedData["data"]["user"]["id"].toString();
+      jsonString["id"] = id;
 
-//     // Create proper request headers
-//     Map<String, String> requestHeaders = {
-//       'Content-Type': 'application/x-www-form-urlencoded',
-//     };
-//     var url = Uri.https(
-//       Config.apiURL,
-//       Config.apiEndPoint + Config.customerLoginURL,
-//     );
+      SharedService.setLoginDetails(loginResponseJson(json.encode(jsonString)));
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-//     var response = await client.post(url,
-//         headers: requestHeaders, body: {
-//           "username":username,
-//           "password":password,
+  static Map<String, dynamic> parsejwt(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('Invalid token');
+    }
 
-//         }
-        
-//         );
+    final payload = _decodeBase64(parts[1]); // Pass string to function
+    final payloadMap = json.decode(payload);
+    if (payloadMap is! Map<String, dynamic>) {
+      throw Exception('invalid payload');
+    }
+    return payloadMap;
+  }
 
-//     if (response.statusCode == 200) {
+  static String _decodeBase64(String str) {
+    String output = str.replaceAll('.', '+').replaceAll('_', '/');
 
-// var jsonString =json.decoder(response.body);
-// var decodedData = parsejwt(jsonString["token"]);
+    switch (output.length % 4) {
+      case 0:
+        break;
+      case 2:
+        output += '==';
+        break;
+      case 3:
+        output += '=';
+        break;
+      default:
+        throw Exception('illegal base64url string!');
+    }
 
-// var id =decodedData["data"]["user"]["id"].toString();
-// jsonString["id"]=id; 
-//       return true;  
-//     } else {
-//       return false;
-//     }
-//   }
-
-// static Map <String, dynamic> parsejwt (String token){
-
-//   final parts = token .split('.');
-//   if(parts .length !=3){
-//     throw Exception('Invalid token');
-//   }
-
-//   final payload =_decodeBase64{parts[1]};
-//   final payloadMap = json.decode(payload);
-//   if(payloadMap is! Map<String,dynamic>){
-//     throw Exception('invalid payload');
-//   }
-//   return payloadMap;
-//  }
-// static String _decodeBase64(String str){
-//   String output =str.replaceAll('.', '+').replaceAll('_', '/');
-
-// switch (output.length % 4){
-//   case 0;
-//     break;
-//     case 2;
-//     output +='==';
-//     break;
-//     case 3;
-//     output += '-';
-//     break;
-//     default;
-//      throw Exception('illegal base64url string!"');
-
-// }
-
-// return utf8.decode(base64Url.decode(output));
-
-// }
-
-
-
+    return utf8.decode(base64Url.decode(output));
+  }
 }
