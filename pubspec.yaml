@@ -16,6 +16,7 @@ dependencies:
   flutter_easyloading: ^3.0.5
   api_cache_manager: ^1.0.2
   sqflite_common_ffi: ^2.3.0+2
+  carousel_slider: ^5.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

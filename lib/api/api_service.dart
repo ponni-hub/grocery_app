@@ -7,6 +7,8 @@ import 'package:grocery_app/models/product_item.dart';
 import 'package:http/http.dart' as http;
 import 'package:grocery_app/api/shared_service.dart';
 import 'package:grocery_app/models/login_response_model.dart';
+import 'package:grocery_app/models/slider_model.dart';
+import 'package:grocery_app/models/user_model.dart';
 
 class ApiService {
   static var client = http.Client();
@@ -38,13 +40,13 @@ class ApiService {
         },
       );
 
-      print("Response Code: \${response.statusCode}");
+      print("Response Code: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return categoriesFromJson(data);
       } else {
-        print('Failed to load categories: \${response.body}');
+        print('Failed to load categories: ${response.body}');
         return null;
       }
     } catch (e) {
@@ -61,6 +63,7 @@ class ApiService {
     String? sortOrder = "asc",
     String? sortBy,
     List<int>? productIds,
+    final String? image,
   }) async {
     final String basicAuth =
         'Basic ' + base64Encode(utf8.encode('${Config.key}:${Config.secret}'));
@@ -88,20 +91,17 @@ class ApiService {
     if (pageNumber != null) {
       queryString["page"] = pageNumber.toString();
     }
-
     if (categoryId != null) {
       if (strSearch == "" || strSearch == null) {
         queryString["category"] = categoryId;
       }
     }
-
     if (sortBy != null) {
       queryString["orderBy"] = sortBy;
     }
     if (sortOrder != null) {
       queryString["order"] = sortOrder;
     }
-
     if (productIds != null) {
       queryString["include"] = productIds.join(",").toString();
     }
@@ -123,13 +123,13 @@ class ApiService {
         },
       );
 
-      print("Response Code: \${response.statusCode}");
+      print("Response Code: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return productsFromJson(data);
       } else {
-        print('Failed to load categories: \${response.body}');
+        print('Failed to load categories: ${response.body}');
         return null;
       }
     } catch (e) {
@@ -174,38 +174,40 @@ class ApiService {
         },
       );
 
-      print("Response Code: \${response.statusCode}");
+      print("Response Code: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return ProductModel.fromJson(data);
       } else {
-        print('Failed to load categories: \${response.body}');
+        print('Failed to load product: ${response.body}');
         return null;
       }
     } catch (e) {
-      print("Error fetching categories: $e");
+      print("Error fetching product: $e");
       return null;
     }
   }
 
   static Future<bool> registerUser(CustomerModel model) async {
-    // Encode the basic auth token properly
     var authToken =
         base64.encode(utf8.encode('${Config.key}:${Config.secret}'));
 
-    // Create proper request headers
     Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Authorization': 'Basic $authToken'
     };
+
     var url = Uri.https(
       Config.apiURL,
       Config.apiEndPoint + Config.customerURL,
     );
 
-    var response = await client.post(url,
-        headers: requestHeaders, body: jsonEncode(model.tojson()));
+    var response = await client.post(
+      url,
+      headers: requestHeaders,
+      body: jsonEncode(model.tojson()),
+    );
 
     if (response.statusCode == 201) {
       return true;
@@ -214,65 +216,110 @@ class ApiService {
     }
   }
 
-  static Future<bool> loginCustomer(String username, String password) async {
-    // Create proper request headers
+  static Map<String, dynamic> parseJwtToken(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('invalid token');
+    }
+
+    final payload = parts[1];
+    var normalized = base64Url.normalize(payload);
+    var payloadMap = json.decode(utf8.decode(base64Url.decode(normalized)));
+
+    if (payloadMap is! Map<String, dynamic>) {
+      throw Exception('invalid payload');
+    }
+
+    return payloadMap;
+  }
+
+  static Future<UserModel?> loginCustomer(
+      String username, String password) async {
     Map<String, String> requestHeaders = {
       'Content-Type': 'application/x-www-form-urlencoded',
     };
+
     var url = Uri.https(
       Config.apiURL,
       Config.customerLoginURL,
     );
 
-    var response = await client.post(url, headers: requestHeaders, body: {
-      "username": username,
-      "password": password,
-    });
+    try {
+      var response = await client.post(url, headers: requestHeaders, body: {
+        "username": username,
+        "password": password,
+      });
 
-    if (response.statusCode == 200) {
-      var jsonString = json.decode(response.body);
-      var decodedData = parsejwt(jsonString["token"]);
+      print("Login Response Body: ${response.body}");
 
-      var id = decodedData["data"]["user"]["id"].toString();
-      jsonString["id"] = id;
+      if (response.statusCode == 200) {
+        var jsonString = json.decode(response.body);
 
-      SharedService.setLoginDetails(loginResponseJson(json.encode(jsonString)));
-      return true;
-    } else {
-      return false;
+        print("Decoded JSON: $jsonString");
+
+        if (jsonString["data"] == null) {
+          throw Exception("Login failed: 'data' field is missing in response");
+        }
+
+        var data = jsonString["data"];
+
+        var userModel = UserModel.fromJson(data);
+
+        return userModel;
+      } else {
+        print('Login failed: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print("Error during login: $e");
+      return null;
     }
   }
 
-  static Map<String, dynamic> parsejwt(String token) {
-    final parts = token.split('.');
-    if (parts.length != 3) {
-      throw Exception('Invalid token');
-    }
+//  static Future<List<SliderModel>?> getSliders() async {
+//     final Map<String, String> requestHeaders = {
+//       'Content-Type': 'application/json',
+//     };
 
-    final payload = _decodeBase64(parts[1]); // Pass string to function
-    final payloadMap = json.decode(payload);
-    if (payloadMap is! Map<String, dynamic>) {
-      throw Exception('invalid payload');
-    }
-    return payloadMap;
+//     try {
+//       var url = Uri.https(
+//         Config.apiURL,
+//         Config.sliderURL,
+//       );
+
+//       print("Requesting Sliders URL: $url");
+
+//       final response = await client.get(url, headers: requestHeaders);
+
+//       print("Sliders Response Code: ${response.statusCode}");
+
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         return slidersFromJson(json.encode(data));
+//         // Assuming `slidersFromJson` is your parsing function
+//       } else {
+//         print('Failed to load sliders: ${response.body}');
+//         return null;
+//       }
+//     } catch (e) {
+//       print("Error fetching sliders: $e");
+//       return null;
+//     }
+//   }
+
+  static Future<List<SliderModel>> getSliders() async {
+    await Future.delayed(Duration(seconds: 2));
+    return [
+      SliderModel(image: 'https://via.placeholder.com/600x400'), // ← correct
+      SliderModel(image: 'https://via.placeholder.com/600x400'),
+    ];
   }
 
-  static String _decodeBase64(String str) {
-    String output = str.replaceAll('.', '+').replaceAll('_', '/');
-
-    switch (output.length % 4) {
-      case 0:
-        break;
-      case 2:
-        output += '==';
-        break;
-      case 3:
-        output += '=';
-        break;
-      default:
-        throw Exception('illegal base64url string!');
-    }
-
-    return utf8.decode(base64Url.decode(output));
+  static Future<List<ProductModel>> getProductslider() async {
+    await Future.delayed(Duration(seconds: 2));
+    return [
+      ProductModel(image: 'https://via.placeholder.com/150'), // ← correct
+      ProductModel(image: 'https://via.placeholder.com/150'),
+    ];
   }
 }

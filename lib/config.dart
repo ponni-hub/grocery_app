@@ -9,11 +9,10 @@ class Config {
 
   static String get fullCategoriesPath => "$apiEndPoint/$categoriesURL";
 
-  static String productsURL ="products";
+  static String productsURL = "products";
 
-static String customerURL ="customers";
+  static String customerURL = "customers";
 
-static String customerLoginURL ="/wp-json/jwt-auth/v1/token";
-
-
+  static String customerLoginURL = "/wp-json/jwt-auth/v1/token";
+  static const String sliderURL = '/api/slider';
 }

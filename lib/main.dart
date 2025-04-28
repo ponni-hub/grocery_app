@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:grocery_app/api/shared_service.dart';
+import 'package:grocery_app/pages/account/acount.dart';
 import 'package:grocery_app/pages/dashboard/dashboard_page.dart';
 import 'package:grocery_app/pages/login/login_page.dart';
 import 'package:grocery_app/pages/products/product_details_page.dart';
 import 'package:grocery_app/pages/products/products_page.dart';
-import 'package:grocery_app/pages/registration/user_register_page.dart';
 import 'package:grocery_app/provider/products_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // for database
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:grocery_app/pages/registration/user_register_page.dart';
+import 'package:grocery_app/models/user_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,19 +51,25 @@ class MainApp extends StatelessWidget {
               ),
             );
           } else {
-            // Handle null properly here
-            bool isLoggedIn = snapshot.data ?? false;
+            // Safely handle snapshot.data
+            final bool isLoggedIn = snapshot.data ?? false;
 
             return MaterialApp(
               debugShowCheckedModeBanner: false,
               builder: EasyLoading.init(),
-              initialRoute: isLoggedIn ? '/' : '/register',
+              // Set UserRegisterPage as the first page (home)
+              home: const UserRegisterPage(),
               routes: {
-                '/': (context) => DashboardPage(),
-                '/products': (context) => ProductsPage(),
+                '/products': (context) => const ProductsPage(),
+                '/product-details': (context) => const ProductDetailsPage(),
+                '/account': (context) {
+                  final user =
+                      ModalRoute.of(context)!.settings.arguments as UserModel;
+                  return Acount(user: user);
+                },
                 '/register': (context) => const UserRegisterPage(),
-                '/product-details': (context) => ProductDetailsPage(),
-                '/login': (context) => LoginPage(),
+                '/login': (context) => const LoginPage(),
+                '/dashboard': (context) => const DashboardPage(),
               },
             );
           }
@@ -70,13 +78,3 @@ class MainApp extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-

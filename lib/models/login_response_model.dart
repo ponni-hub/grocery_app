@@ -20,11 +20,12 @@ class LoginResponseModel {
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
-      token: json["token"],
-      userEmail: json["userEmail"],
-      userNicename: json["userNicename"],
-      userDisplayName: json["userDisplayName"],
-      id: json["id"],
+      // Use null-aware operators to ensure default values if the field is null
+      token: json["token"] ?? '',
+      userEmail: json["userEmail"] ?? '',
+      userNicename: json["userNicename"] ?? '',
+      userDisplayName: json["userDisplayName"] ?? '',
+      id: json["id"]?.toString() ?? '', // Ensure 'id' is always a string
     );
   }
 

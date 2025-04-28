@@ -11,7 +11,9 @@ class ProductModel {
   String? price;
   String? regularPrice;
   String? salePrice;
+  String? image;
   List<ImageModel>? images;
+  
 
 
   List<int>? relatedIds;
@@ -24,6 +26,7 @@ class ProductModel {
     this.salePrice,
     this.images,
     this.relatedIds,
+    this.image
   });
 
   ProductModel.fromJson(Map<String, dynamic> json) {

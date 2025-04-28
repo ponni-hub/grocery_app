@@ -3,6 +3,7 @@ import 'package:grocery_app/pages/account/acount.dart';
 import 'package:grocery_app/pages/categories/categories_page.dart';
 import 'package:grocery_app/pages/cart/cart.dart';
 import 'package:grocery_app/pages/home/home.dart';
+import 'package:grocery_app/models/user_model.dart';
 
 class NavigatorItem {
   final int index;
@@ -20,7 +21,7 @@ class NavigatorItem {
 
 List<NavigatorItem> navigatoritems = [
   NavigatorItem(
-      index: 0, label: 'Shop', icon: Icons.storefront, screen: Home()),
+      index: 0, label: 'Shop', icon: Icons.storefront, screen: HomePage()),
 
   NavigatorItem(
       index: 1,
@@ -32,5 +33,15 @@ List<NavigatorItem> navigatoritems = [
       index: 2, label: 'Cart', icon: Icons.shopping_cart, screen: Cart()),
 
   NavigatorItem(
-      index: 3, label: 'Account', icon: Icons.person, screen: Account()),
+      index: 3,
+      label: 'Account',
+      icon: Icons.person,
+      screen: Placeholder()), // Temporary placeholder
+
+//   NavigatorItem(
+//   index: 3,
+//   label: 'Account',
+//   icon: Icons.person,
+//   screen: Acount(user: userModel),
+// ),
 ];
