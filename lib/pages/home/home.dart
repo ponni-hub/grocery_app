@@ -1,174 +1,199 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart' as carousel;
+import 'package:grocery_app/api/api_service.dart';
+import 'package:grocery_app/pages/products/product_details_page.dart';
+import 'package:grocery_app/pages/products/product_details_page.dart';
+import 'package:grocery_app/utils/colors.dart';
+import 'package:grocery_app/widget/home_screen_widget.dart';
+// import 'product_details_screen.dart'; // Import the product details screen
 
-class SliderModel {
-  final String? image;
-  SliderModel({this.image});
-}
-
-class ProductModel {
-  final String? image;
-  ProductModel({this.image});
-}
-
-class APIService {
-  static Future<List<SliderModel>> getSliders() async {
-    await Future.delayed(Duration(seconds: 2));
-    return [
-      SliderModel(image: 'https://via.placeholder.com/600x400'),
-      SliderModel(image: 'https://via.placeholder.com/600x400'),
-    ];
-  }
-
-  static Future<List<ProductModel>> getProducts() async {
-    await Future.delayed(Duration(seconds: 2));
-    return [
-      ProductModel(image: 'https://via.placeholder.com/150'),
-      ProductModel(image: 'https://via.placeholder.com/150'),
-    ];
-  }
-}
-
-class ProductItemCardWidget extends StatelessWidget {
-  final ProductModel item;
-  const ProductItemCardWidget({super.key, required this.item});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 100,
-      height: 100,
-      color: Colors.grey,
-      child: (item.image != null && item.image!.isNotEmpty)
-          ? Image.network(item.image!, fit: BoxFit.cover)
-          : const Icon(Icons.image_not_supported),
-    );
-  }
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class _HomeScreenState extends State<HomeScreen> {
+  final ApiService apiService = ApiService(
+    baseUrl: baseUrl,
+    consumerKey: consumerKey,
+    consumerSecret: consumerSecret,
+  );
+
+  List<dynamic> categories = [];
+  List<dynamic> products = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    try {
+      final fetchedCategories = await apiService.fetchCategories();
+      final fetchedProducts = await apiService.fetchProducts();
+      setState(() {
+        categories = fetchedCategories;
+        products = fetchedProducts;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                const Text(
-                  "Delivery in 10 min",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _sliderList(),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      appBar: AppBar(
+        title: const Text('WooCommerce'),
+        backgroundColor: primaryColor,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Categories Section with Animation
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: const Text(
-                      "Weekly Deals",
+                      'Categories',
                       style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontSize: 20,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _categoriesList(),
-                const SizedBox(height: 10),
-                _productsList(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+                  AnimatedCategories(categories: categories),
 
-  Widget _sliderList() {
-    return FutureBuilder<List<SliderModel>?>(
-      future: APIService.getSliders(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text("Error loading slider"));
-        } else if (!snapshot.hasData ||
-            snapshot.data == null ||
-            snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Sliders found'));
-        }
+                  // Promotional Banner
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.network(
+                        'https://ecobloomsbh.com/wp-content/uploads/2024/08/Untitled-design-7.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
 
-        return carousel.CarouselSlider.builder(
-          itemCount: snapshot.data!.length,
-          itemBuilder: (context, index, realIndex) {
-            final item = snapshot.data![index];
-            return Container(
-              margin: const EdgeInsets.all(5),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  item.image ?? '',
-                  fit: BoxFit.fill,
-                ),
+                  // Products Section
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: const Text(
+                      'New Products',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                      childAspectRatio: 0.7,
+                    ),
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return GestureDetector(
+                        onTap: () {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => ProductDetailsPage()
+                          //       // ProductDetailsScreen(product: product),
+                          //       ),
+                          // );
+                        },
+                        child: Card(
+                          elevation: 2.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(16.0), // Rounded corners
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(
+                                      16.0), // Rounded corners for the image
+                                ),
+                                child: Image.network(
+                                  product['images']?[0]['src'] ?? '',
+                                  height: 120,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  product['name'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Text(
+                                  '\$${product['price'] ?? '0.00'}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.star,
+                                        size: 14, color: Colors.orange),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      product['average_rating'] ?? '0.0',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-            );
-          },
-          options: carousel.CarouselOptions(
-            height: 200,
-            autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 2),
-            enlargeCenterPage: true,
-            viewportFraction: 0.8,
-          ),
-        );
-      },
+            ),
     );
-  }
-
-  Widget _productsList() {
-    return FutureBuilder<List<ProductModel>?>(
-      future: APIService.getProducts(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text("Error loading products"));
-        } else if (!snapshot.hasData ||
-            snapshot.data == null ||
-            snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Products found'));
-        }
-
-        return SizedBox(
-          height: 230,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            scrollDirection: Axis.horizontal,
-            itemCount: snapshot.data!.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 20),
-            itemBuilder: (context, index) {
-              final productItem = snapshot.data![index];
-              return GestureDetector(
-                onTap: () {},
-                child: ProductItemCardWidget(item: productItem),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _categoriesList() {
-    return const SizedBox(); // you can add your category list here
   }
 }

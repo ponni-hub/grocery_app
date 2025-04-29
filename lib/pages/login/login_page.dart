@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_app/api/api_service.dart';
 import 'package:grocery_app/models/user_model.dart'; // Import your UserModel
-import 'package:grocery_app/pages/account/acount.dart';
+import 'package:grocery_app/pages/dashboard/dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -161,10 +161,11 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => isLoading = false);
 
       if (userModel != null) {
+        // 👇 After login, navigate to Dashboard, passing the userModel if needed
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => Acount(user: userModel),
+            builder: (context) => DashboardPage(user: userModel),
           ),
         );
       } else {

@@ -6,11 +6,12 @@ import 'package:grocery_app/pages/dashboard/dashboard_page.dart';
 import 'package:grocery_app/pages/login/login_page.dart';
 import 'package:grocery_app/pages/products/product_details_page.dart';
 import 'package:grocery_app/pages/products/products_page.dart';
-import 'package:grocery_app/provider/products_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:grocery_app/pages/registration/user_register_page.dart';
 import 'package:grocery_app/models/user_model.dart';
+import 'package:grocery_app/provider/products_provider.dart';
+import 'package:grocery_app/provider/cart_provider.dart'; // ✅ Import your CartProvider
+import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,7 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductsProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()), // ✅ Added CartProvider here
       ],
       child: FutureBuilder<bool?>(
         future: SharedService.isLoggedIn(),
@@ -51,25 +53,25 @@ class MainApp extends StatelessWidget {
               ),
             );
           } else {
-            // Safely handle snapshot.data
             final bool isLoggedIn = snapshot.data ?? false;
 
             return MaterialApp(
               debugShowCheckedModeBanner: false,
               builder: EasyLoading.init(),
-              // Set UserRegisterPage as the first page (home)
-              home: const UserRegisterPage(),
+              home: const UserRegisterPage(), // Your first page
               routes: {
                 '/products': (context) => const ProductsPage(),
                 '/product-details': (context) => const ProductDetailsPage(),
                 '/account': (context) {
-                  final user =
-                      ModalRoute.of(context)!.settings.arguments as UserModel;
+                  final user = ModalRoute.of(context)!.settings.arguments as UserModel;
                   return Acount(user: user);
                 },
                 '/register': (context) => const UserRegisterPage(),
                 '/login': (context) => const LoginPage(),
-                '/dashboard': (context) => const DashboardPage(),
+                '/dashboard': (context) {
+                  final user = ModalRoute.of(context)!.settings.arguments as UserModel;
+                  return DashboardPage(user: user);
+                },
               },
             );
           }

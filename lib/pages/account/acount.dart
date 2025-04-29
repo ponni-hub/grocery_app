@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_app/pages/account/acount_details.dart';
+import 'package:grocery_app/pages/dashboard/dashboard_page.dart'; // Ensure this import is correct
 import 'package:grocery_app/models/user_model.dart';
 
 class Acount extends StatefulWidget {
@@ -25,7 +25,24 @@ class _AcountState extends State<Acount> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF0A1736),
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            // Navigate back to the DashboardPage
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(
+                    user:
+                        widget.user), // Pass the userModel to the DashboardPage
+              ),
+            );
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -34,7 +51,7 @@ class _AcountState extends State<Acount> {
           Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A1736),
+              color: Colors.green,
               borderRadius: BorderRadius.circular(12.0),
             ),
             child: Row(
@@ -71,7 +88,7 @@ class _AcountState extends State<Acount> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12.0, vertical: 8.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E4CAF),
+                    color: Colors.deepOrange,
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: const Text(

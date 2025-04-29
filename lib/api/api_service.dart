@@ -12,6 +12,14 @@ import 'package:grocery_app/models/user_model.dart';
 
 class ApiService {
   static var client = http.Client();
+  final String baseUrl;
+  final String consumerKey;
+  final String consumerSecret;
+  ApiService({
+    required this.baseUrl,
+    required this.consumerKey,
+    required this.consumerSecret,
+  });
 
   static Future<List<CategoryModel>?> getCategories() async {
     final String basicAuth =
@@ -321,5 +329,107 @@ class ApiService {
       ProductModel(image: 'https://via.placeholder.com/150'), // ← correct
       ProductModel(image: 'https://via.placeholder.com/150'),
     ];
+  }
+
+  ////////////////////praveen code/////////////////
+
+  Map<String, String> _getAuthParams() {
+    return {
+      'consumer_key': "ck_068cfada7a9de6e3b5ded88215ce9018bb988738",
+      'consumer_secret': "cs_0117375f38ac68014bb7bf996ec3d49222e386c0",
+    };
+  }
+
+  Future<List<dynamic>> fetchProducts() async {
+    final uri = Uri.parse('https://ecobloomsbh.com/wp-json/wc/v3/products')
+        .replace(queryParameters: _getAuthParams());
+    final response = await http.get(uri);
+
+    print('Request URL: $uri');
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      try {
+        final cleanedBody = _cleanResponse(response.body);
+        return jsonDecode(cleanedBody);
+      } catch (e) {
+        throw Exception('Failed to parse products response: ${e.toString()}');
+      }
+    } else {
+      _handleError(response);
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchCategories() async {
+    final uri =
+        Uri.parse('https://ecobloomsbh.com/wp-json/wc/v3/products/categories')
+            .replace(queryParameters: _getAuthParams());
+    final response = await http.get(uri);
+
+    print('Request URL: $uri');
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      try {
+        final cleanedBody = _cleanResponse(response.body);
+        return jsonDecode(cleanedBody);
+      } catch (e) {
+        throw Exception('Failed to parse categories response: ${e.toString()}');
+      }
+    } else {
+      _handleError(response);
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchOrders() async {
+    final uri = Uri.parse('https://ecobloomsbh.com/wp-json/wc/v3/orders')
+        .replace(queryParameters: _getAuthParams());
+    final response = await http.get(uri);
+
+    print('Request URL: $uri');
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      try {
+        final cleanedBody = _cleanResponse(response.body);
+        return jsonDecode(cleanedBody);
+      } catch (e) {
+        throw Exception('Failed to parse orders response: ${e.toString()}');
+      }
+    } else {
+      _handleError(response);
+      return [];
+    }
+  }
+
+  // Helper method to clean the response body
+  String _cleanResponse(String responseBody) {
+    // Remove any HTML tags like <br> or <b>
+    final cleanedBody = responseBody.replaceAll(RegExp(r'<[^>]*>'), '');
+
+    // Find the start of the JSON array or object
+    final jsonStartIndex = cleanedBody.indexOf('[');
+    if (jsonStartIndex != -1) {
+      return cleanedBody.substring(jsonStartIndex);
+    } else {
+      throw Exception('No valid JSON found in the response.');
+    }
+  }
+
+  void _handleError(http.Response response) {
+    // Log the response body for debugging
+    print('Error response: ${response.body}');
+    if (response.body.startsWith('<')) {
+      throw Exception(
+          'Unexpected HTML response. Possible server error or invalid credentials.');
+    } else {
+      throw Exception(
+          'Failed with status code ${response.statusCode}: ${response.body}');
+    }
   }
 }
